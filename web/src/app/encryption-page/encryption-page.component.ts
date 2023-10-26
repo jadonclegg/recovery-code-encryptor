@@ -86,6 +86,10 @@ export class EncryptionPageComponent {
       }
     });
   }
+
+  public copy() {
+    navigator.clipboard.writeText(this.form.value.output ?? '');
+  }
 }
 
 const passwordsMatchValidator: ValidatorFn = (

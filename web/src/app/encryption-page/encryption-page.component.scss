@@ -22,9 +22,17 @@
             border: 1px solid red;
         }
 
-        border: 1px solid black;
+        border: 1px solid ghostwhite;
         border-radius: 3px;
         padding: 5px 10px;
+
+        background-color: rgb(68, 68, 68);
+
+        :focus {
+            outline: 2px solid white;
+        }
+
+        color: ghostwhite;
     }
 
     textarea {

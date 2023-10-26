@@ -5,6 +5,7 @@ import (
 	"embed"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -148,7 +149,9 @@ func handleDecrypt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(encryptedMsg) < aead.NonceSize() {
-		panic("ciphertext too short")
+		err = errors.New("ciphertext too short")
+		handleEncryptError(w, response, err)
+		return
 	}
 
 	// Split nonce and ciphertext.
