@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/rand"
 	"embed"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -11,6 +14,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/chacha20poly1305"
 )
 
 //go:embed web/dist/web
@@ -43,12 +47,122 @@ func main() {
 	panic(err)
 }
 
-func handleEncrypt(w http.ResponseWriter, r *http.Request) {
+type encryptionResponse struct {
+	Result  string `json:"result"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
 
+type encryptionRequest struct {
+	Password string `json:"password"`
+	Name     string `json:"name"`
+	Data     string `json:"data"`
+}
+
+func handleEncrypt(w http.ResponseWriter, r *http.Request) {
+	response := &encryptionResponse{
+		Result:  "result",
+		Success: true,
+		Message: "",
+	}
+
+	dec := json.NewDecoder(r.Body)
+	req := &encryptionRequest{}
+	err := dec.Decode(req)
+	if err != nil {
+		response.Success = false
+		response.Message = "failed to decode json"
+		writeEncrpytionResponse(w, response)
+		return
+	}
+
+	key := getCipherKey(req.Password, req.Name)
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		handleEncryptError(w, response, err)
+		return
+	}
+
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(req.Data)+aead.Overhead())
+	_, err = rand.Read(nonce)
+	if err != nil {
+		handleEncryptError(w, response, err)
+		return
+	}
+
+	cypherText := aead.Seal(nonce, nonce, []byte(req.Data), []byte(req.Name))
+
+	response.Result = base64.StdEncoding.EncodeToString(cypherText)
+	writeEncrpytionResponse(w, response)
+}
+
+func handleEncryptError(w http.ResponseWriter, response *encryptionResponse, err error) {
+	response.Success = false
+	response.Message = err.Error()
+	writeEncrpytionResponse(w, response)
+}
+
+func writeEncrpytionResponse(w http.ResponseWriter, response *encryptionResponse) {
+	data, err := json.Marshal(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to marshal response"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	return
 }
 
 func handleDecrypt(w http.ResponseWriter, r *http.Request) {
+	response := &encryptionResponse{
+		Result:  "result",
+		Success: true,
+		Message: "",
+	}
 
+	dec := json.NewDecoder(r.Body)
+	req := &encryptionRequest{}
+	err := dec.Decode(req)
+	if err != nil {
+		response.Success = false
+		response.Message = "failed to decode json"
+		writeEncrpytionResponse(w, response)
+		return
+	}
+
+	key := getCipherKey(req.Password, req.Name)
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		handleEncryptError(w, response, err)
+		return
+	}
+
+	encryptedMsg, err := base64.StdEncoding.DecodeString(req.Data)
+	if err != nil {
+		response.Success = false
+		response.Message = "failed to decode base64"
+		writeEncrpytionResponse(w, response)
+		return
+	}
+
+	if len(encryptedMsg) < aead.NonceSize() {
+		panic("ciphertext too short")
+	}
+
+	// Split nonce and ciphertext.
+	nonce, ciphertext := encryptedMsg[:aead.NonceSize()], encryptedMsg[aead.NonceSize():]
+
+	// Decrypt the message and check it wasn't tampered with.
+	plaintext, err := aead.Open(nil, nonce, ciphertext, []byte(req.Name))
+	if err != nil {
+		handleEncryptError(w, response, err)
+		return
+	}
+
+	response.Result = string(plaintext)
+	writeEncrpytionResponse(w, response)
 }
 
 func getCipherKey(password string, salt string) []byte {

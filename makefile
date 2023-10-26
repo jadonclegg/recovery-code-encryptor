@@ -19,6 +19,6 @@ frontend:
 	cd web && ng build
 
 frontend-watch:
-	cd web && ng build --watch
+	cd web && ng build --watch -c development
 
 .PSEUDO js: dist/js/main.js
