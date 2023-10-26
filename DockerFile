@@ -1,0 +1,7 @@
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY recovery-code-encryptor ./
+EXPOSE 8080
+CMD [ "/app/recovery-code-encryptor" ]
