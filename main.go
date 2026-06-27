@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
-//go:embed web/dist/web
+//go:embed web2/dist/web2/browser
 var web embed.FS
 
 func main() {
@@ -30,9 +30,9 @@ func main() {
 
 	if len(os.Args) > 1 && os.Args[1] == "--fs" {
 		fmt.Println("using fs mode")
-		r.PathPrefix("/").Handler(http.FileServer(http.Dir("dist/web")))
+		r.PathPrefix("/").Handler(http.FileServer(http.Dir("dist/web2/browser")))
 	} else {
-		fSys, err := fs.Sub(web, "web/dist/web")
+		fSys, err := fs.Sub(web, "web2/dist/web2/browser")
 		if err != nil {
 			panic(err)
 		}

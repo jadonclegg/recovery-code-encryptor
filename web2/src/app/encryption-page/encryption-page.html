@@ -1,0 +1,51 @@
+<form class="inputs">
+  <div>
+    <label>Password:</label>
+    <input type="password" [formField]="encForm.password1" />
+  </div>
+  <div>
+    <label>Confirm:</label>
+    <input type="password" [formField]="encForm.password2" />
+  </div>
+  @if (encForm.password2().touched()) {
+    @for (err of encForm.password1().errors(); track err) {
+      <div class="error">{{ err.message }}</div>
+    }
+    @for (err of encForm.password2().errors(); track err) {
+      <div class="error">{{ err.message }}</div>
+    }
+  }
+  <div>
+    <label>Credential Name:</label>
+    <input type="text" [formField]="encForm.name" />
+  </div>
+  @if (encForm.name().touched()) {
+    @for (err of encForm.name().errors(); track err) {
+      <div class="error">{{ err.message }}</div>
+    }
+  }
+
+  <div>
+    <label>Data:</label>
+    <textarea [formField]="encForm.data"></textarea>
+  </div>
+  @if (encForm.data().touched()) {
+    @for (err of encForm.data().errors(); track err) {
+      <div class="error">{{ err.message }}</div>
+    }
+  }
+
+  <div>
+    <button type="button" (click)="encrypt()" [disabled]="encForm().invalid()">Encrypt</button>
+    <button type="button" (click)="decrypt()" [disabled]="encForm().invalid()">Decrypt</button>
+  </div>
+
+  <div>
+    <label>Output:</label>
+    <textarea [formField]="encForm.output"></textarea>
+  </div>
+
+  <div>
+    <button type="button" [disabled]="!encForm.output().value()" (click)="copy()">Copy</button>
+  </div>
+</form>
