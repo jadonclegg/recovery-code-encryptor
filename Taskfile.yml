@@ -11,6 +11,7 @@ tasks:
     cmds:
       - podman tag ghcr.io/jadonclegg/recovery-code-encryptor:latest ghcr.io/jadonclegg/recovery-code-encryptor:{{.VERSION}}
       - podman push ghcr.io/jadonclegg/recovery-code-encryptor:{{.VERSION}}
+      - podman push ghcr.io/jadonclegg/recovery-code-encryptor:latest
       - git tag {{.VERSION}}
       - git push --tags
 
