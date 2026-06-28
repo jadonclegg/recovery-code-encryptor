@@ -13,7 +13,6 @@ import (
 
 	_ "embed"
 
-	"github.com/gorilla/mux"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
 )
@@ -22,7 +21,7 @@ import (
 var web embed.FS
 
 func main() {
-	r := mux.NewRouter()
+	r := http.NewServeMux()
 
 	r.HandleFunc("/encrypt", handleEncrypt)
 
@@ -30,14 +29,14 @@ func main() {
 
 	if len(os.Args) > 1 && os.Args[1] == "--fs" {
 		fmt.Println("using fs mode")
-		r.PathPrefix("/").Handler(http.FileServer(http.Dir("dist/web2/browser")))
+		r.Handle("/", http.FileServer(http.Dir("web2/dist/web2/browser")))
 	} else {
 		fSys, err := fs.Sub(web, "web2/dist/web2/browser")
 		if err != nil {
 			panic(err)
 		}
 
-		r.PathPrefix("/").Handler(http.FileServer(http.FS(fSys)))
+		r.Handle("/", http.FileServer(http.FS(fSys)))
 	}
 
 	http.Handle("/", r)
@@ -113,7 +112,6 @@ func writeEncrpytionResponse(w http.ResponseWriter, response *encryptionResponse
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
-	return
 }
 
 func handleDecrypt(w http.ResponseWriter, r *http.Request) {
