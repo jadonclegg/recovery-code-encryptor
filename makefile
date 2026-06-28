@@ -8,6 +8,7 @@ run: docker
 
 docker: build
 	podman build -f DockerFile --tag recovery-code-encryptor
+	podman tag localhost/recovery-code-encryptor:latest ghcr.io/jadonclegg/recovery-code-encryptor:latest
 
 runfs: docker
 	podman run -it --rm --name recovery-code-encryptor-test -p 8080:8080 -v ./web2/dist:/app/dist recovery-code-encryptor:latest /app/recovery-code-encryptor --fs

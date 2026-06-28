@@ -7,10 +7,13 @@
     <label>Confirm:</label>
     <input type="password" [formField]="encForm.password2" />
   </div>
-  @if (encForm.password2().touched()) {
+  @if (encForm.password1().touched()) {
     @for (err of encForm.password1().errors(); track err) {
       <div class="error">{{ err.message }}</div>
     }
+  }
+
+  @if (encForm.password2().touched()) {
     @for (err of encForm.password2().errors(); track err) {
       <div class="error">{{ err.message }}</div>
     }
