@@ -61,5 +61,11 @@ tasks:
   
   build-frontend:
     dir: ./web2
+    sources:
+      - "src/"
+      - "public/"
+      - "*.json"
+    generates:
+      - "dist/**/*"
     cmds:
       - ng build
