@@ -62,8 +62,8 @@ tasks:
   build-frontend:
     dir: ./web2
     sources:
-      - "src/"
-      - "public/"
+      - "src/**/*"
+      - "public/**/*"
       - "*.json"
     generates:
       - "dist/**/*"

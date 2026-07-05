@@ -70,7 +70,7 @@ func handleEncrypt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ciphertext, err := EncryptBase64(req)
+	ciphertext, err := EncryptBase64V2(req)
 	if err != nil {
 		handleEncryptError(w, response, err)
 		return
@@ -116,7 +116,12 @@ func handleDecrypt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	plaintext, err := DecryptBase64(req)
+	var plaintext []byte
+	plaintext, err = DecryptBase64V2(req)
+	if err != nil {
+		plaintext, err = DecryptBase64(req)
+	}
+
 	if err != nil {
 		handleEncryptError(w, response, err)
 		return
