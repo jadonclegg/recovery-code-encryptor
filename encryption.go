@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
@@ -22,15 +21,9 @@ func EncryptBase64(req *encryptionRequest) ([]byte, error) {
 
 	cypherText := aead.Seal(nonce, nonce, []byte(req.Data), []byte(req.Name))
 
-	out := make([]byte, 0, len(req.Data)*2)
-	buf := bytes.NewBuffer(out)
-	enc := base64.NewEncoder(base64.StdEncoding, buf)
-	_, err = enc.Write(cypherText)
-	if err != nil {
-		return nil, fmt.Errorf("error converting to base64: %w", err)
-	}
+	enc := base64.StdEncoding.EncodeToString(cypherText)
 
-	return buf.Bytes(), nil
+	return []byte(enc), nil
 }
 
 func DecryptBase64(req *encryptionRequest) ([]byte, error) {
