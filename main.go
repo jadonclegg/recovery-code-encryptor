@@ -9,8 +9,6 @@ import (
 	"os"
 
 	_ "embed"
-
-	"golang.org/x/crypto/argon2"
 )
 
 //go:embed web2/dist/web2/browser
@@ -126,8 +124,4 @@ func handleDecrypt(w http.ResponseWriter, r *http.Request) {
 
 	response.Result = string(plaintext)
 	writeEncrpytionResponse(w, response)
-}
-
-func getCipherKey(password string, salt string) []byte {
-	return argon2.IDKey([]byte(password), []byte(salt), 1, 64*1024, 4, 32)
 }
