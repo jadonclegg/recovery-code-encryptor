@@ -1,11 +1,8 @@
 package main
 
 import (
-	"crypto/rand"
 	"embed"
-	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -14,7 +11,6 @@ import (
 	_ "embed"
 
 	"golang.org/x/crypto/argon2"
-	"golang.org/x/crypto/chacha20poly1305"
 )
 
 //go:embed web2/dist/web2/browser
@@ -76,23 +72,14 @@ func handleEncrypt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := getCipherKey(req.Password, req.Name)
-	aead, err := chacha20poly1305.NewX(key)
+	ciphertext, err := EncryptBase64(req)
 	if err != nil {
 		handleEncryptError(w, response, err)
 		return
 	}
 
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(req.Data)+aead.Overhead())
-	_, err = rand.Read(nonce)
-	if err != nil {
-		handleEncryptError(w, response, err)
-		return
-	}
+	response.Result = string(ciphertext)
 
-	cypherText := aead.Seal(nonce, nonce, []byte(req.Data), []byte(req.Name))
-
-	response.Result = base64.StdEncoding.EncodeToString(cypherText)
 	writeEncrpytionResponse(w, response)
 }
 
@@ -131,32 +118,7 @@ func handleDecrypt(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := getCipherKey(req.Password, req.Name)
-	aead, err := chacha20poly1305.NewX(key)
-	if err != nil {
-		handleEncryptError(w, response, err)
-		return
-	}
-
-	encryptedMsg, err := base64.StdEncoding.DecodeString(req.Data)
-	if err != nil {
-		response.Success = false
-		response.Message = "failed to decode base64"
-		writeEncrpytionResponse(w, response)
-		return
-	}
-
-	if len(encryptedMsg) < aead.NonceSize() {
-		err = errors.New("ciphertext too short")
-		handleEncryptError(w, response, err)
-		return
-	}
-
-	// Split nonce and ciphertext.
-	nonce, ciphertext := encryptedMsg[:aead.NonceSize()], encryptedMsg[aead.NonceSize():]
-
-	// Decrypt the message and check it wasn't tampered with.
-	plaintext, err := aead.Open(nil, nonce, ciphertext, []byte(req.Name))
+	plaintext, err := DecryptBase64(req)
 	if err != nil {
 		handleEncryptError(w, response, err)
 		return
